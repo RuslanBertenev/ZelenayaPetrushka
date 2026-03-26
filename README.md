@@ -206,6 +206,12 @@ GET /api/v1/partners/stores?latitude=55.751244&longitude=37.618423&city=Моск
 Host: api.petrushka-green.ru
 Authorization: Bearer <token>
 Accept: application/json
+```
+---
+# Задание 3: архитектура
+Спроектировал схему для магазна "Петрушка Зеленая".
+
+Зайти в папку doc, в ней открыть run и в браузере вставить http://localhost:8000 там документация к схеме
 
 
 

@@ -1,283 +1,573 @@
-{
-  "openapi": "3.0.0",
-  "info": {
-    "title": "Notification & Order API",
-    "version": "1.0.0",
-    "description": "API для отправки уведомлений (SMS, Push) и управления статусами заказов."
-  },
-  "servers": [
-    {
-      "url": "https://api.example.com",
-      "description": "Production Server"
-    },
-    {
-      "url": "https://dev-api.example.com",
-      "description": "Development Server"
-    }
-  ],
-  "paths": {
-    "/api/v1/sms/send": {
-      "post": {
-        "summary": "Отправка SMS уведомления",
-        "tags": ["Notifications"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SmsRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "SMS успешно отправлено",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Ошибка валидации (неверный формат телефона)"
-          }
-        }
-      }
-    },
-    "/api/v1/push/send": {
-      "post": {
-        "summary": "Отправка Push уведомления",
-        "tags": ["Notifications"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PushRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Push успешно отправлен",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/order/{order_id}": {
-      "get": {
-        "summary": "Получение информации о заказе",
-        "tags": ["Orders"],
-        "parameters": [
-          {
-            "name": "order_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer",
-              "example": 345
-            },
-            "description": "Уникальный идентификатор заказа"
-          },
-          {
-            "name": "client_id",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "example": "123"
-            },
-            "description": "ID клиента (перенесено в параметры запроса для соблюдения стандартов GET)"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Данные заказа получены",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/OrderResponse"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Заказ не найден"
-          }
-        }
-      }
-    },
-    "/api/v1/order/{order_id}/status": {
-      "put": {
-        "summary": "Обновление статуса заказа",
-        "tags": ["Orders"],
-        "parameters": [
-          {
-            "name": "order_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "integer"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StatusUpdateRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Статус обновлен",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SuccessResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "SmsRequest": {
-        "type": "object",
-        "required": ["client_id", "phone", "message"],
-        "properties": {
-          "client_id": {
-            "type": "string",
-            "example": "123"
-          },
-          "phone": {
-            "type": "string",
-            "example": "+79990000000",
-            "description": "Номер телефона в международном формате"
-          },
-          "message": {
-            "type": "string",
-            "example": "Ваш заказ готов"
-          }
-        }
-      },
-      "PushRequest": {
-        "type": "object",
-        "required": ["client_id", "message", "order_id"],
-        "properties": {
-          "client_id": {
-            "type": "string",
-            "example": "123"
-          },
-          "message": {
-            "type": "string",
-            "example": "Статус заказа изменен"
-          },
-          "order_id": {
-            "type": "integer",
-            "example": 345
-          }
-        }
-      },
-      "StatusUpdateRequest": {
-        "type": "object",
-        "required": ["client_id", "status"],
-        "properties": {
-          "client_id": {
-            "type": "string",
-            "example": "123"
-          },
-          "status": {
-            "type": "string",
-            "enum": ["new", "processing", "delivery", "completed", "cancelled"],
-            "example": "delivery"
-          }
-        }
-      },
-      "OrderResponse": {
-        "type": "object",
-        "properties": {
-          "client_id": {
-            "type": "string",
-            "example": "123"
-          },
-          "order_id": {
-            "type": "integer",
-            "example": 345
-          },
-          "items": {
-            "type": "object",
-            "properties": {
-              "available": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/OrderItem"
-                }
-              },
-              "analog": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/OrderItem"
-                }
-              },
-              "not_available": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/components/schemas/OrderItem"
-                }
-              }
-            }
-          }
-        }
-      },
-      "OrderItem": {
-        "type": "object",
-        "properties": {
-          "item_id": {
-            "type": "string",
-            "example": "333"
-          },
-          "title": {
-            "type": "string",
-            "example": "Наименование товара"
-          },
-          "price": {
-            "type": "number",
-            "format": "float",
-            "example": 234.45
-          }
-        }
-      },
-      "SuccessResponse": {
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "string",
-            "example": "success"
-          },
-          "message": {
-            "type": "string",
-            "example": "Operation completed"
-          }
-        }
-      }
-    }
-  }
-}
+openapi: 3.0.3
+info:
+  title: API Петрушка Зеленая
+  description: |
+    API для интернет-магазина "Петрушка Зеленая" - управление заказами, уведомлениями и оплатой.
+    
+    ## Основные функции:
+    - Отправка SMS и PUSH уведомлений
+    - Управление заказами (просмотр, изменение статуса)
+    - Работа с корзиной покупок
+    - Инициация оплаты
+  version: 1.0.0
+  contact:
+    name: Техническая поддержка
+    email: api@petrushka-zelena.ru
+
+servers:
+  - url: https://api.petrushka-zelena.ru
+    description: Production сервер
+  - url: https://api-dev.petrushka-zelena.ru
+    description: Тестовый сервер
+
+tags:
+  - name: Уведомления
+    description: Отправка SMS и PUSH уведомлений
+  - name: Заказы
+    description: Управление заказами и корзиной
+  - name: Оплата
+    description: Инициация платежей
+
+components:
+  schemas:
+    # ========== Ошибки ==========
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error]
+          example: error
+        code:
+          type: string
+          example: INVALID_PHONE
+        message:
+          type: string
+          example: Некорректный формат номера телефона
+      required:
+        - status
+        - code
+        - message
+
+    # ========== SMS ==========
+    SmsSendRequest:
+      type: object
+      properties:
+        client_id:
+          type: string
+          description: Идентификатор клиента
+          example: "123"
+        phone:
+          type: string
+          description: Номер телефона в формате +7XXXXXXXXXX
+          example: "+79123456789"
+        message:
+          type: string
+          description: Текст сообщения
+          example: "Ваш заказ готов к доставке!"
+      required:
+        - client_id
+        - phone
+        - message
+
+    SmsSendResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success]
+          example: success
+        message_id:
+          type: string
+          description: Идентификатор отправленного сообщения
+          example: "sms_12345"
+        sent_at:
+          type: string
+          format: date-time
+          description: Время отправки
+          example: "2026-03-26T14:30:00Z"
+      required:
+        - status
+        - message_id
+        - sent_at
+
+    # ========== PUSH ==========
+    PushSendRequest:
+      type: object
+      properties:
+        client_id:
+          type: string
+          description: Идентификатор клиента
+          example: "123"
+        message:
+          type: string
+          description: Текст уведомления
+          example: "Ваш заказ №345 доставлен!"
+        order_id:
+          type: string
+          description: Идентификатор заказа (опционально)
+          example: "345"
+      required:
+        - client_id
+        - message
+
+    PushSendResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success]
+          example: success
+        push_id:
+          type: string
+          description: Идентификатор уведомления
+          example: "push_67890"
+        sent_at:
+          type: string
+          format: date-time
+          description: Время отправки
+          example: "2026-03-26T14:30:00Z"
+        devices_count:
+          type: integer
+          description: Количество устройств, на которые отправлено уведомление
+          example: 2
+      required:
+        - status
+        - push_id
+        - sent_at
+        - devices_count
+
+    # ========== Товар в заказе ==========
+    OrderItem:
+      type: object
+      properties:
+        item_id:
+          type: string
+          description: Идентификатор товара
+          example: "333"
+        title:
+          type: string
+          description: Название товара
+          example: "iPhone 13"
+        price:
+          type: number
+          format: float
+          description: Цена товара
+          example: 234.45
+        quantity:
+          type: integer
+          description: Количество товара
+          example: 1
+      required:
+        - item_id
+        - title
+        - price
+        - quantity
+
+    # ========== Заказ ==========
+    OrderResponse:
+      type: object
+      properties:
+        client_id:
+          type: string
+          description: Идентификатор клиента
+          example: "123"
+        order_id:
+          type: string
+          description: Идентификатор заказа
+          example: "345"
+        items:
+          type: object
+          properties:
+            available:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderItem'
+              description: Список доступных товаров
+            analog:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderItem'
+              description: Список аналогов для недоступных товаров
+            not_available:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderItem'
+              description: Список недоступных товаров
+          required:
+            - available
+            - analog
+            - not_available
+        total_price:
+          type: number
+          format: float
+          description: Общая стоимость заказа
+          example: 234.45
+        created_at:
+          type: string
+          format: date-time
+          description: Дата создания заказа
+          example: "2026-03-26T10:00:00Z"
+      required:
+        - client_id
+        - order_id
+        - items
+        - total_price
+        - created_at
+
+    # ========== Обновление статуса ==========
+    OrderStatusUpdateRequest:
+      type: object
+      properties:
+        client_id:
+          type: string
+          description: Идентификатор клиента
+          example: "123"
+        status:
+          type: string
+          description: Новый статус заказа
+          enum: [in_cart, created, confirmed, processing, delivery, completed, cancelled]
+          example: "delivery"
+      required:
+        - client_id
+        - status
+
+    OrderStatusUpdateResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success]
+          example: success
+        order_id:
+          type: string
+          description: Идентификатор заказа
+          example: "345"
+        previous_status:
+          type: string
+          description: Предыдущий статус
+          example: "confirmed"
+        new_status:
+          type: string
+          description: Новый статус
+          example: "delivery"
+        updated_at:
+          type: string
+          format: date-time
+          description: Время обновления
+          example: "2026-03-26T14:30:00Z"
+      required:
+        - status
+        - order_id
+        - previous_status
+        - new_status
+        - updated_at
+
+    # ========== Заказ в корзине ==========
+    CartOrder:
+      type: object
+      properties:
+        client_id:
+          type: string
+          description: Идентификатор клиента
+          example: "123"
+        order_id:
+          type: string
+          description: Идентификатор заказа
+          example: "456"
+        status:
+          type: string
+          enum: [in_cart]
+          description: Статус заказа
+          example: "in_cart"
+        date_create:
+          type: string
+          format: date
+          description: Дата создания (формат ДД.ММ.ГГГГ)
+          example: "12.12.2025"
+        items_count:
+          type: integer
+          description: Количество товаров в заказе
+          example: 3
+        total_price:
+          type: number
+          format: float
+          description: Общая стоимость заказа
+          example: 567.89
+      required:
+        - client_id
+        - order_id
+        - status
+        - date_create
+        - items_count
+        - total_price
+
+    # ========== Оплата ==========
+    PaymentRequest:
+      type: object
+      properties:
+        client_id:
+          type: string
+          description: Идентификатор клиента
+          example: "123"
+        order_id:
+          type: string
+          description: Идентификатор заказа
+          example: "345"
+      required:
+        - client_id
+        - order_id
+
+    PaymentResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success]
+          example: success
+        payment_id:
+          type: string
+          description: Идентификатор платежа
+          example: "pay_123456"
+        order_id:
+          type: string
+          description: Идентификатор заказа
+          example: "345"
+        amount:
+          type: number
+          format: float
+          description: Сумма к оплате
+          example: 234.45
+        payment_url:
+          type: string
+          format: uri
+          description: URL для перенаправления на оплату
+          example: "https://payment-gateway.com/pay/pay_123456"
+        expires_at:
+          type: string
+          format: date-time
+          description: Время истечения ссылки на оплату
+          example: "2026-03-26T15:30:00Z"
+      required:
+        - status
+        - payment_id
+        - order_id
+        - amount
+        - payment_url
+        - expires_at
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
+
+paths:
+  # ========== SMS ==========
+  /api/v1/sms/send:
+    post:
+      tags:
+        - Уведомления
+      summary: Отправка SMS-сообщения
+      description: Отправка SMS-сообщения клиенту
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmsSendRequest'
+      responses:
+        '200':
+          description: SMS успешно отправлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmsSendResponse'
+        '400':
+          description: Некорректные параметры запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Необходима аутентификация
+        '500':
+          description: Внутренняя ошибка сервера
+
+  # ========== PUSH ==========
+  /api/v1/push/send:
+    post:
+      tags:
+        - Уведомления
+      summary: Отправка PUSH-уведомления
+      description: Отправка PUSH-уведомления на устройство клиента
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PushSendRequest'
+      responses:
+        '200':
+          description: PUSH-уведомление успешно отправлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PushSendResponse'
+        '400':
+          description: Некорректные параметры запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Необходима аутентификация
+        '500':
+          description: Внутренняя ошибка сервера
+
+  # ========== Получение заказа ==========
+  /api/v1/order/{order_id}:
+    get:
+      tags:
+        - Заказы
+      summary: Получение информации о заказе
+      description: Получение детальной информации о заказе, включая доступность товаров
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Идентификатор заказа
+      responses:
+        '200':
+          description: Информация о заказе получена успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '401':
+          description: Необходима аутентификация
+        '404':
+          description: Заказ не найден
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Внутренняя ошибка сервера
+
+  # ========== Обновление статуса заказа ==========
+  /api/v1/order/status/{order_id}:
+    put:
+      tags:
+        - Заказы
+      summary: Обновление статуса заказа
+      description: Изменение статуса заказа
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Идентификатор заказа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderStatusUpdateRequest'
+      responses:
+        '200':
+          description: Статус заказа успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderStatusUpdateResponse'
+        '400':
+          description: Некорректные параметры запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Необходима аутентификация
+        '404':
+          description: Заказ не найден
+        '500':
+          description: Внутренняя ошибка сервера
+
+  # ========== Заказы в корзине ==========
+  /api/v1/order/status/in_cart:
+    get:
+      tags:
+        - Заказы
+      summary: Получение заказов в корзине
+      description: Получение списка заказов клиента со статусом "в корзине"
+      parameters:
+        - name: client_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Идентификатор клиента
+      responses:
+        '200':
+          description: Список заказов в корзине получен успешно
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CartOrder'
+        '400':
+          description: Некорректные параметры запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Необходима аутентификация
+        '500':
+          description: Внутренняя ошибка сервера
+
+  # ========== Оплата ==========
+  /api/v1/payment:
+    post:
+      tags:
+        - Оплата
+      summary: Инициация оплаты заказа
+      description: Инициация процесса оплаты заказа
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '200':
+          description: Оплата успешно инициирована
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+        '400':
+          description: Некорректные параметры запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Необходима аутентификация
+        '404':
+          description: Заказ не найден
+        '500':
+          description: Внутренняя ошибка сервера
