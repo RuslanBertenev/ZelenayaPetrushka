@@ -1,0 +1,283 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Notification & Order API",
+    "version": "1.0.0",
+    "description": "API для отправки уведомлений (SMS, Push) и управления статусами заказов."
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com",
+      "description": "Production Server"
+    },
+    {
+      "url": "https://dev-api.example.com",
+      "description": "Development Server"
+    }
+  ],
+  "paths": {
+    "/api/v1/sms/send": {
+      "post": {
+        "summary": "Отправка SMS уведомления",
+        "tags": ["Notifications"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SmsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SMS успешно отправлено",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Ошибка валидации (неверный формат телефона)"
+          }
+        }
+      }
+    },
+    "/api/v1/push/send": {
+      "post": {
+        "summary": "Отправка Push уведомления",
+        "tags": ["Notifications"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Push успешно отправлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/order/{order_id}": {
+      "get": {
+        "summary": "Получение информации о заказе",
+        "tags": ["Orders"],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "example": 345
+            },
+            "description": "Уникальный идентификатор заказа"
+          },
+          {
+            "name": "client_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "123"
+            },
+            "description": "ID клиента (перенесено в параметры запроса для соблюдения стандартов GET)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Данные заказа получены",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrderResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Заказ не найден"
+          }
+        }
+      }
+    },
+    "/api/v1/order/{order_id}/status": {
+      "put": {
+        "summary": "Обновление статуса заказа",
+        "tags": ["Orders"],
+        "parameters": [
+          {
+            "name": "order_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatusUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Статус обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SmsRequest": {
+        "type": "object",
+        "required": ["client_id", "phone", "message"],
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "example": "123"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+79990000000",
+            "description": "Номер телефона в международном формате"
+          },
+          "message": {
+            "type": "string",
+            "example": "Ваш заказ готов"
+          }
+        }
+      },
+      "PushRequest": {
+        "type": "object",
+        "required": ["client_id", "message", "order_id"],
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "example": "123"
+          },
+          "message": {
+            "type": "string",
+            "example": "Статус заказа изменен"
+          },
+          "order_id": {
+            "type": "integer",
+            "example": 345
+          }
+        }
+      },
+      "StatusUpdateRequest": {
+        "type": "object",
+        "required": ["client_id", "status"],
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "example": "123"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["new", "processing", "delivery", "completed", "cancelled"],
+            "example": "delivery"
+          }
+        }
+      },
+      "OrderResponse": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "example": "123"
+          },
+          "order_id": {
+            "type": "integer",
+            "example": 345
+          },
+          "items": {
+            "type": "object",
+            "properties": {
+              "available": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/OrderItem"
+                }
+              },
+              "analog": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/OrderItem"
+                }
+              },
+              "not_available": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/OrderItem"
+                }
+              }
+            }
+          }
+        }
+      },
+      "OrderItem": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "example": "333"
+          },
+          "title": {
+            "type": "string",
+            "example": "Наименование товара"
+          },
+          "price": {
+            "type": "number",
+            "format": "float",
+            "example": 234.45
+          }
+        }
+      },
+      "SuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Operation completed"
+          }
+        }
+      }
+    }
+  }
+}
